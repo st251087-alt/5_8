@@ -2,996 +2,1033 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DURIAN FIGHTER 〜魔法の果実〜</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>カニの仕分けサバイバル</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* --- ベーススタイル --- */
-        :root {
-            --disney-gold: #FFD700;
-            --disney-blue: #0f172a;
-        }
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-        body {
-            font-family: 'Noto Serif JP', serif;
-            background-color: var(--disney-blue);
-            color: white;
-            overflow: hidden;
-            user-select: none;
-            touch-action: manipulation; /* スマホでのズーム防止 */
-            height: 100vh;
-            width: 100vw;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-        }
-        .font-magic {
-            font-family: 'Cinzel', serif;
-        }
-        .hidden {
-            display: none !important;
-        }
+        /* 砂浜のテクスチャと波のレイアウト */
+        body { margin: 0; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; }
         
-        /* --- 背景・エフェクト --- */
-        .bg-gradient {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: radial-gradient(ellipse at center, rgba(30,58,138,0.4) 0%, rgba(15,23,42,0.8) 50%, #000 100%);
-            z-index: 0;
-            pointer-events: none;
-        }
-        .stars {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none;
-            z-index: 0;
-        }
-        .star {
-            position: absolute;
-            background: white;
-            border-radius: 50%;
-            animation: twinkle infinite ease-in-out;
-            box-shadow: 0 0 5px #fff, 0 0 10px #FFD700;
-        }
-        @keyframes twinkle {
-            0%, 100% { opacity: 0.2; transform: scale(0.5); }
-            50% { opacity: 1; transform: scale(1.2); }
+        .beach-bg {
+            background-color: #dcbfa6;
+            background-image: 
+                radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1) 0%, transparent 100%),
+                url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E");
         }
 
-        #special-overlay {
+        .wave-container {
             position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            z-index: 30;
-            background: radial-gradient(circle, rgba(147,51,234,0.5) 0%, rgba(0,0,0,0.8) 100%);
-            mix-blend-mode: hard-light;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-        #special-overlay.show {
-            opacity: 1;
+            bottom: 0; left: 0; width: 100%; height: 35vh;
+            overflow: hidden; pointer-events: none; z-index: 10;
         }
 
-        /* --- 画面レイアウト --- */
-        .screen {
+        .wave {
             position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            z-index: 50;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            transition: opacity 0.5s;
+            bottom: -50px; left: -10%; width: 120%; height: 100%;
+            border-radius: 50% 50% 0 0;
+            opacity: 0.5;
+            filter: blur(3px);
+            animation: wave-anim 5s infinite alternate ease-in-out;
         }
-        .screen-dark {
-            background-color: rgba(0, 0, 0, 0.8);
+        .wave-1 {
+            background: radial-gradient(ellipse at top, rgba(255, 255, 255, 0.8) 0%, rgba(135, 206, 235, 0.4) 40%, rgba(65, 105, 225, 0.5) 100%);
+        }
+        .wave-2 {
+            bottom: -80px;
+            animation-delay: -2s; animation-duration: 7s;
+            background: radial-gradient(ellipse at top, rgba(255, 255, 255, 0.9) 0%, rgba(173, 216, 230, 0.5) 50%, rgba(30, 144, 255, 0.6) 100%);
+        }
+        .wave-3 {
+            bottom: -110px;
+            animation-delay: -4s; animation-duration: 6s;
+            background: radial-gradient(ellipse at top, rgba(255, 255, 255, 1) 0%, rgba(70, 130, 180, 0.6) 60%, rgba(0, 0, 139, 0.7) 100%);
         }
 
-        /* --- タイトル画面 --- */
-        .title-sub {
-            color: #facc15;
-            font-size: 1.25rem;
-            letter-spacing: 0.3em;
-            margin-bottom: 0.5rem;
-            text-align: center;
+        @keyframes wave-anim {
+            0% { transform: translateY(20px) scaleY(0.9) scaleX(1); }
+            100% { transform: translateY(-30px) scaleY(1.1) scaleX(1.02); }
         }
-        .title-main {
-            font-size: 4rem;
-            font-weight: bold;
-            background: linear-gradient(to bottom, #fef08a, #ca8a04);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0 0 15px rgba(255,215,0,0.5));
-            margin-bottom: 3rem;
-            text-align: center;
-        }
-        @media (min-width: 768px) { .title-main { font-size: 6rem; } }
 
-        /* --- 汎用ボタン・パネル --- */
-        .glass-panel {
-            background: rgba(15, 23, 42, 0.7);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 215, 0, 0.3);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
-            border-radius: 1rem;
+        /* カニの基本スタイルと歩行アニメーション */
+        .crab-wrapper {
+            position: absolute;
+            will-change: transform;
             cursor: pointer;
-            transition: background 0.2s;
-        }
-        .glass-panel:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-        .btn-magic {
-            background: linear-gradient(135deg, rgba(255,215,0,0.2) 0%, rgba(255,215,0,0) 100%);
-            border: 2px solid var(--disney-gold);
-            box-shadow: 0 0 10px rgba(255,215,0,0.3);
-            border-radius: 9999px;
-            color: #fef9c3;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.1s ease;
-        }
-        .btn-magic:active {
-            transform: scale(0.95);
-            background: rgba(255,215,0,0.3);
-        }
-        .btn-large {
-            padding: 1.25rem 3rem;
-            font-size: 1.5rem;
-            letter-spacing: 0.1em;
-        }
-
-        /* --- キャラ選択画面 --- */
-        .select-title {
-            font-size: 2.25rem;
-            color: #fde047;
-            margin-bottom: 2rem;
-            text-align: center;
-        }
-        .select-grid {
-            display: flex;
-            gap: 1.5rem;
-            width: 100%;
-            max-width: 56rem;
-            justify-content: center;
-        }
-        .char-card {
-            flex: 1;
-            padding: 1.5rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            border-top: 2px solid rgba(255,215,0,0.5);
-        }
-        .char-card.blue { border-top-color: rgba(96,165,250,0.5); }
-        .char-card.red { border-top-color: rgba(248,113,113,0.5); }
-        .char-icon { font-size: 4rem; margin-bottom: 1rem; }
-        .char-name { font-size: 1.125rem; font-weight: bold; color: #fef08a; }
-        .char-name.blue { color: #bfdbfe; }
-        .char-name.red { color: #fecaca; }
-        .char-desc { font-size: 0.75rem; color: #9ca3af; margin-top: 0.5rem; text-align: center; }
-
-        /* --- バトル画面 UI --- */
-        #screen-battle {
-            z-index: 10;
-            justify-content: space-between;
-        }
-        
-        /* HUD */
-        .hud {
-            width: 100%;
-            padding: 1.5rem 1rem 0.5rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 1rem;
             z-index: 20;
+            -webkit-tap-highlight-color: transparent;
         }
-        .hud-side { width: 45%; }
-        .hud-center {
-            width: 10%;
-            display: flex;
-            justify-content: center;
-            font-size: 2.25rem;
-            color: var(--disney-gold);
-            filter: drop-shadow(0 0 5px var(--disney-gold));
-        }
-        .hud-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            margin-bottom: 0.25rem;
-        }
-        .hud-header.reverse { flex-direction: row-reverse; }
-        .hud-name {
-            font-size: 1.25rem;
-            font-weight: bold;
-            color: #fef08a;
-        }
-        .hud-name.enemy { color: #d8b4fe; }
         
-        .hp-border {
-            width: 100%;
-            height: 2rem;
-            background-color: #450a0a;
-            border: 2px solid #9ca3af;
-            border-radius: 0.25rem;
-            padding: 2px;
-            display: flex;
-            box-shadow: 0 0 10px rgba(0,0,0,0.8);
-        }
-        .hp-border.player { justify-content: flex-end; }
-        .hp-border.enemy { justify-content: flex-start; }
-        
-        .hp-bar {
-            height: 100%;
-            width: 100%;
-            transition: width 0.2s ease-out;
-        }
-        .hp-bar.player { background: linear-gradient(to left, #fde047, #eab308); }
-        .hp-bar.enemy { background: linear-gradient(to right, #ef4444, #b91c1c); }
+        .crab-svg { filter: drop-shadow(2px 4px 3px rgba(0,0,0,0.4)); }
 
-        /* 闘技場 */
-        .arena {
-            flex: 1;
-            position: relative;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            padding: 0 3rem 2rem;
-            z-index: 10;
+        @keyframes walkL {
+            0% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-4px) rotate(8deg); }
+            100% { transform: translateY(0) rotate(0deg); }
         }
-        @media (min-width: 768px) { .arena { padding: 0 8rem 2rem; } }
-        
-        .sprite-wrapper { position: relative; z-index: 20; }
-        .sprite-wrapper.enemy { z-index: 10; }
-        
-        .sprite {
-            font-size: 8rem;
-            filter: drop-shadow(0 25px 25px rgba(0,0,0,0.5));
-            transform-origin: bottom;
+        @keyframes walkR {
+            0% { transform: translateY(-4px) rotate(-8deg); }
+            50% { transform: translateY(0) rotate(0deg); }
+            100% { transform: translateY(-4px) rotate(-8deg); }
         }
-        @media (min-width: 768px) { .sprite { font-size: 12rem; } }
-        .scale-x-reverse { transform: scaleX(-1); }
+        @keyframes bodyRoll {
+            0% { transform: rotate(-3deg); }
+            100% { transform: rotate(3deg); }
+        }
 
-        .shield-effect {
+        /* 捕獲エフェクト */
+        .score-popup {
             position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            border-radius: 50%;
-            transform: scale(1.5);
-            filter: blur(10px);
-            opacity: 0;
-            transition: opacity 0.2s;
-        }
-        .shield-player { background-color: rgba(59, 130, 246, 0.4); }
-        .shield-enemy { background-color: rgba(168, 85, 247, 0.4); }
-
-        /* コントロールパネル */
-        .controls-container {
-            padding: 1rem;
-            background: linear-gradient(to top, rgba(0,0,0,1), rgba(0,0,0,0.8), transparent);
-            z-index: 20;
-            border-top: 1px solid rgba(255,255,255,0.1);
-        }
-        @media (min-width: 768px) { .controls-container { padding: 2rem; } }
-        
-        .controls {
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-            max-width: 48rem;
-            margin: 0 auto;
-            width: 100%;
-        }
-        .btn-control {
-            flex: 1;
-            padding: 1rem 0;
-            border-radius: 1rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 0.25rem;
-            position: relative;
-            overflow: hidden;
-        }
-        @media (min-width: 768px) { .btn-control { padding: 1.5rem 0; } }
-        
-        .btn-control.defend { border-color: #3b82f6; color: #bfdbfe; }
-        .btn-control.special { border-color: #a855f7; color: #d8b4fe; }
-        
-        .btn-control .icon { font-size: 1.875rem; z-index: 10; position: relative; }
-        .btn-control .label { font-size: 1.125rem; font-weight: bold; z-index: 10; position: relative; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
-        .btn-control .key { font-size: 0.75rem; color: #9ca3af; z-index: 10; position: relative; }
-        .btn-control.defend .key { color: rgba(96, 165, 250, 0.7); }
-        .btn-control.special .key { color: rgba(216, 180, 254, 0.7); }
-
-        #special-gauge-bg {
-            position: absolute;
-            bottom: 0; left: 0;
-            width: 100%;
-            height: 0%;
-            background-color: rgba(147, 51, 234, 0.6);
-            transition: height 0.2s;
-            z-index: 0;
-        }
-        .ready-pulse {
-            animation: readyPulse 1.5s infinite;
-            border-color: #facc15 !important;
-        }
-        @keyframes readyPulse {
-            0%, 100% { box-shadow: 0 0 10px rgba(250, 204, 21, 0.5); }
-            50% { box-shadow: 0 0 25px rgba(250, 204, 21, 1); }
-        }
-
-        /* --- アニメーション関連 --- */
-        /* プレイヤーの攻撃 */
-        @keyframes dash-right {
-            0% { transform: translateX(0) rotate(0deg); }
-            40% { transform: translateX(120px) rotate(15deg) scale(1.1); }
-            100% { transform: translateX(0) rotate(0deg); }
-        }
-        .anim-dash-right { animation: dash-right 0.3s ease-in-out forwards; }
-
-        /* 敵の攻撃 */
-        @keyframes dash-left {
-            0% { transform: translateX(0) scaleX(-1) rotate(0deg); }
-            40% { transform: translateX(-120px) scaleX(-1) rotate(-15deg) scale(1.1); }
-            100% { transform: translateX(0) scaleX(-1) rotate(0deg); }
-        }
-        .anim-dash-left { animation: dash-left 0.4s ease-in-out forwards; }
-
-        /* 被弾揺れ */
-        @keyframes hit-shake {
-            0% { transform: translateX(0); filter: brightness(1); }
-            20% { transform: translateX(-15px); filter: brightness(2) sepia(1) hue-rotate(-50deg) saturate(5); }
-            40% { transform: translateX(15px); filter: brightness(2) sepia(1) hue-rotate(-50deg) saturate(5); }
-            60% { transform: translateX(-10px); filter: brightness(1); }
-            80% { transform: translateX(10px); filter: brightness(1); }
-            100% { transform: translateX(0); filter: brightness(1); }
-        }
-        .anim-hit { animation: hit-shake 0.4s ease-in-out forwards; }
-        
-        /* 敵の被弾 (反転維持) */
-        @keyframes enemy-hit-shake {
-            0% { transform: translateX(0) scaleX(-1); filter: brightness(1); }
-            20% { transform: translateX(15px) scaleX(-1); filter: brightness(2) sepia(1) hue-rotate(-50deg) saturate(5); }
-            40% { transform: translateX(-15px) scaleX(-1); filter: brightness(2) sepia(1) hue-rotate(-50deg) saturate(5); }
-            60% { transform: translateX(10px) scaleX(-1); filter: brightness(1); }
-            80% { transform: translateX(-10px) scaleX(-1); filter: brightness(1); }
-            100% { transform: translateX(0) scaleX(-1); filter: brightness(1); }
-        }
-        .anim-enemy-hit { animation: enemy-hit-shake 0.4s ease-in-out forwards; }
-
-        /* 画面揺れ */
-        @keyframes screen-shake {
-            0% { transform: translate(0, 0); }
-            20% { transform: translate(-5px, 5px); }
-            40% { transform: translate(5px, -5px); }
-            60% { transform: translate(-5px, -5px); }
-            80% { transform: translate(5px, 5px); }
-            100% { transform: translate(0, 0); }
-        }
-        .anim-screen-shake { animation: screen-shake 0.3s ease-in-out; }
-
-        /* 呼吸 */
-        @keyframes breathe {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-        .idle { animation: breathe 3s infinite ease-in-out; }
-        .idle-enemy { animation: breathe 3s infinite ease-in-out; animation-delay: 1.5s; transform: scaleX(-1); }
-
-        /* --- ポップアップ・カットイン --- */
-        .damage-text {
-            position: fixed;
+            color: #fbbf24; /* yellow-400 */
             font-weight: 900;
-            font-size: 3rem;
-            z-index: 100;
+            font-size: 2rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8), 0 0 10px rgba(255,255,255,0.5);
             pointer-events: none;
-            animation: floatUp 1s ease-out forwards;
-            font-family: 'Cinzel', serif;
-            text-shadow: 3px 3px 0 #000, -1px -1px 0 #000, 3px -1px 0 #000, -1px 3px 0 #000;
+            z-index: 50;
+            animation: popupAnim 0.6s ease-out forwards;
         }
-        @keyframes floatUp {
-            0% { transform: translateY(0) scale(0.5); opacity: 1; }
-            20% { transform: translateY(-20px) scale(1.2); opacity: 1; }
-            100% { transform: translateY(-80px) scale(1); opacity: 0; }
+        @keyframes popupAnim {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
+            50% { transform: translate(-50%, -100%) scale(1.2); opacity: 1; }
+            100% { transform: translate(-50%, -150%) scale(1); opacity: 0; }
         }
 
-        .cutin {
+        /* 画面フラッシュ */
+        .flash-red {
+            animation: flashAnim 0.3s ease-out;
+        }
+        @keyframes flashAnim {
+            0% { background-color: rgba(220, 38, 38, 0.8); }
+            100% { background-color: transparent; }
+        }
+
+        /* 魔王のアニメーション */
+        @keyframes maouFloat {
+            0% { transform: translateY(-5px); }
+            100% { transform: translateY(5px); }
+        }
+        @keyframes maouShake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            25% { transform: translate(-1px, -2px) rotate(-1deg); }
+            50% { transform: translate(-3px, 0px) rotate(1deg); }
+            75% { transform: translate(3px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -1px) rotate(-1deg); }
+        }
+        .maou-wrapper {
             position: absolute;
-            top: 25%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 2.5rem;
-            font-weight: bold;
-            opacity: 0;
-            transition: opacity 0.2s;
-            z-index: 40;
-            white-space: nowrap;
-            filter: drop-shadow(0 0 10px rgba(0,0,0,1));
+            z-index: 35;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
-        @media (min-width: 768px) { .cutin { font-size: 4rem; } }
-        .cutin.show { opacity: 1; }
-        
-        .text-color-green { color: #86efac; }
-        .text-color-blue { color: #93c5fd; }
-        .text-color-red { color: #fca5a5; }
-
-        /* --- リザルト画面 --- */
-        .result-title {
-            font-size: 4.5rem;
-            margin-bottom: 1rem;
-            text-align: center;
+        .maou-float {
+            animation: maouFloat 1.5s infinite alternate ease-in-out;
         }
-        .result-title.win {
-            color: #facc15;
-            filter: drop-shadow(0 0 20px #facc15);
-        }
-        .result-title.lose {
-            color: #ef4444;
-            filter: drop-shadow(0 0 20px #ef4444);
-        }
-        .result-desc {
-            font-size: 1.5rem;
-            color: #e5e7eb;
-            margin-bottom: 3rem;
-            text-align: center;
+        .maou-shake {
+            animation: maouShake 0.1s infinite;
         }
     </style>
 </head>
-<body id="game-body" onkeydown="handleKeyDown(event)">
+<body class="w-screen h-screen relative bg-black">
 
-    <!-- 背景エフェクト -->
-    <div class="bg-gradient"></div>
-    <div id="stars-container" class="stars"></div>
-    
-    <!-- 必殺技時の暗転オーバーレイ -->
-    <div id="special-overlay"></div>
+    <!-- 背景・ゲームボード -->
+    <div id="game-board" class="absolute inset-0 beach-bg">
+        <!-- 飾り: ヒトデ -->
+        <svg class="absolute top-[15%] left-[20%] w-12 h-12 opacity-30" viewBox="0 0 100 100" fill="#c47a52">
+            <polygon points="50,5 61,35 95,35 68,55 78,85 50,65 22,85 32,55 5,35 39,35" stroke="#8b4513" stroke-width="2"/>
+        </svg>
+        <svg class="absolute top-[60%] right-[15%] w-8 h-8 opacity-40 rotate-45" viewBox="0 0 100 100" fill="#d8b8a5">
+             <path d="M50,10 C70,10 90,30 90,50 C90,80 50,90 50,90 C50,90 10,80 10,50 C10,30 30,10 50,10 Z" stroke="#8b4513" stroke-width="1"/>
+        </svg>
+    </div>
 
-    <!-- ================= タイトル画面 ================= -->
-    <div id="screen-title" class="screen">
-        <div class="idle">
-            <p class="title-sub font-magic">REALTIME BATTLE</p>
-            <h1 class="title-main font-magic">DURIAN FIGHTER</h1>
+    <!-- 波の演出（手前） -->
+    <div class="wave-container">
+        <div class="wave wave-3"></div>
+        <div class="wave wave-2"></div>
+        <div class="wave wave-1"></div>
+    </div>
+
+    <!-- UI レイヤー -->
+    <div class="absolute top-0 left-0 w-full p-4 flex justify-between items-start pointer-events-none z-40">
+        <div class="bg-white/80 px-4 py-2 rounded-xl shadow-lg border-2 border-gray-300 pointer-events-auto">
+            <span class="text-gray-700 font-bold text-xl">SCORE: </span>
+            <span id="score-display" class="text-orange-600 font-black text-3xl">0</span>
         </div>
-        <button onclick="showScreen('screen-select')" class="btn-magic btn-large font-magic">
-            FIGHT START
+    </div>
+
+    <div id="flash-overlay" class="absolute inset-0 pointer-events-none z-50"></div>
+
+    <!-- 魔王警告オーバーレイ -->
+    <div id="warning-overlay" class="absolute inset-0 flex items-center justify-center pointer-events-none z-[45] hidden">
+        <div class="text-red-500 font-black text-5xl md:text-7xl drop-shadow-[0_0_20px_rgba(0,0,0,1)] tracking-widest animate-pulse bg-black/50 w-full text-center py-6 border-y-4 border-red-600">
+            WARNING: 魔王襲来
+        </div>
+    </div>
+
+    <!-- スタート画面 -->
+    <div id="start-screen" class="absolute inset-0 bg-black/70 overflow-y-auto z-[60] backdrop-blur-sm">
+        <div class="min-h-full flex flex-col items-center justify-center p-4 py-8">
+            <h1 class="text-4xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-orange-300 to-red-600 mb-4 drop-shadow-[0_2px_2px_rgba(255,255,255,0.8)] text-center tracking-tight leading-tight">
+                カニの仕分け<br>サバイバル
+            </h1>
+            <div class="bg-white/10 p-4 md:p-6 rounded-2xl border border-white/20 mb-6 max-w-lg shadow-2xl w-full">
+                <p class="text-white text-base md:text-xl font-medium leading-relaxed text-center mb-3">
+                    迫りくる<span class="text-orange-300 font-bold">普通のカニ（赤茶色）</span>を<br>タップして捕まえろ！
+                </p>
+                <div class="bg-red-900/50 p-3 rounded-xl border border-red-500/50 text-center mb-3">
+                    <p class="text-red-200 font-bold text-sm md:text-lg mb-1">⚠️ 猛毒注意 ⚠️</p>
+                    <p class="text-white font-bold text-sm md:text-base">
+                        <span class="text-red-400">スベスベマンジュウガニ<br>（丸くて斑点がある）</span><br>には絶対に触るな！
+                    </p>
+                </div>
+                <div class="bg-purple-900/60 p-3 rounded-xl border border-purple-500/50 text-center">
+                    <p class="text-white font-bold text-sm md:text-base">
+                        時折 <span class="text-purple-400 text-lg md:text-xl font-black">【魔王ガニ】</span> が襲来！<br>
+                        ゲージが溜まる前に<br><span class="text-yellow-400 text-lg md:text-xl">連続タップ</span> で撃退しろ！
+                    </p>
+                </div>
+            </div>
+            <button id="start-btn" class="flex-shrink-0 px-8 py-4 md:px-10 md:py-5 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500 text-white rounded-full font-black text-xl md:text-3xl shadow-[0_0_20px_rgba(234,88,12,0.6)] transform hover:scale-105 transition-all border-4 border-orange-200">
+                ゲームスタート
+            </button>
+        </div>
+    </div>
+
+    <!-- ゲームオーバー画面 -->
+    <div id="gameover-screen" class="absolute inset-0 bg-red-950/90 flex flex-col items-center justify-center z-[60] hidden backdrop-blur-md p-4">
+        <h1 class="text-5xl md:text-7xl font-black text-red-500 mb-2 drop-shadow-[0_0_15px_rgba(239,68,68,0.8)]">GAME OVER</h1>
+        <p id="gameover-reason" class="text-red-200 text-xl md:text-2xl mb-8 font-bold tracking-widest text-center">猛毒にやられた...</p>
+        
+        <div class="bg-black/40 p-6 md:p-8 rounded-3xl mb-8 border border-red-800/50 text-center w-full max-w-sm">
+            <p class="text-gray-300 text-lg mb-2">最終スコア</p>
+            <p id="final-score" class="text-6xl font-black text-yellow-400 drop-shadow-[0_2px_2px_rgba(0,0,0,1)]">0</p>
+        </div>
+        
+        <button id="retry-btn" class="px-10 py-5 bg-white text-red-900 hover:bg-gray-200 rounded-full font-black text-2xl md:text-3xl shadow-[0_0_20px_rgba(255,255,255,0.4)] transform hover:scale-105 transition-all">
+            もう一度挑む
         </button>
     </div>
-
-    <!-- ================= キャラクター選択画面 ================= -->
-    <div id="screen-select" class="screen screen-dark hidden">
-        <h2 class="select-title font-magic">Select Your Fighter</h2>
-        
-        <div class="select-grid">
-            <!-- プリンセス -->
-            <div onclick="selectCharacter('princess')" class="glass-panel char-card">
-                <div class="char-icon">👸</div>
-                <div class="char-name">プリンセス</div>
-                <div class="char-desc">必殺: 大回復</div>
-            </div>
-            <!-- 魔法使い -->
-            <div onclick="selectCharacter('wizard')" class="glass-panel char-card blue">
-                <div class="char-icon">🧙‍♂️</div>
-                <div class="char-name blue">魔法使い</div>
-                <div class="char-desc">必殺: メテオ(大ダメージ)</div>
-            </div>
-            <!-- 野獣 -->
-            <div onclick="selectCharacter('beast')" class="glass-panel char-card red">
-                <div class="char-icon">🦁</div>
-                <div class="char-name red">野獣</div>
-                <div class="char-desc">必殺: 突進＆防御UP</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ================= バトル画面 ================= -->
-    <div id="screen-battle" class="screen hidden">
-        
-        <!-- 上部：HUD（体力ゲージ等） -->
-        <div class="hud">
-            <!-- プレイヤー情報 -->
-            <div class="hud-side">
-                <div class="hud-header">
-                    <div id="player-name" class="hud-name font-magic">Player</div>
-                </div>
-                <div class="hp-border player">
-                    <div id="player-hp-bar" class="hp-bar player"></div>
-                </div>
-            </div>
-
-            <!-- 中央 VS -->
-            <div class="hud-center font-magic">VS</div>
-
-            <!-- 敵情報 -->
-            <div class="hud-side">
-                <div class="hud-header reverse">
-                    <div id="enemy-name" class="hud-name enemy font-magic">Villain Apple</div>
-                </div>
-                <div class="hp-border enemy">
-                    <div id="enemy-hp-bar" class="hp-bar enemy"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 中央：闘技場（キャラクター立ち絵） -->
-        <div class="arena">
-            
-            <!-- プレイヤー -->
-            <div class="sprite-wrapper">
-                <div id="player-shield" class="shield-effect shield-player"></div>
-                <div id="player-sprite" class="sprite idle">👸</div>
-            </div>
-
-            <!-- 敵 -->
-            <div class="sprite-wrapper enemy">
-                <div id="enemy-shield" class="shield-effect shield-enemy"></div>
-                <div id="enemy-sprite" class="sprite idle-enemy scale-x-reverse">🍎</div>
-            </div>
-
-            <!-- カットイン表示用 -->
-            <div id="cutin-text" class="cutin font-magic">SPECIAL MOVE!</div>
-        </div>
-
-        <!-- 下部：コントロールパネル -->
-        <div class="controls-container">
-            <div class="controls">
-                
-                <div id="btn-attack" onpointerdown="doAttack()" class="btn-magic glass-panel btn-control">
-                    <span class="icon">👊</span>
-                    <span class="label">攻撃</span>
-                    <span class="key">Key: A</span>
-                </div>
-                
-                <div id="btn-defend" onpointerdown="doDefend()" class="btn-magic glass-panel btn-control defend">
-                    <span class="icon">🛡️</span>
-                    <span class="label">防御</span>
-                    <span class="key">Key: S</span>
-                </div>
-                
-                <div id="btn-special" onpointerdown="doSpecial()" class="glass-panel btn-control special">
-                    <div id="special-gauge-bg"></div>
-                    <span class="icon">✨</span>
-                    <span class="label">必殺技</span>
-                    <span class="key">Key: D</span>
-                </div>
-
-            </div>
-        </div>
-    </div>
-
-    <!-- ================= 結果画面 ================= -->
-    <div id="screen-result" class="screen screen-dark hidden">
-        <h2 id="result-title" class="result-title font-magic">K.O.</h2>
-        <p id="result-desc" class="result-desc"></p>
-        
-        <button onclick="resetGame()" class="btn-magic btn-large font-magic">
-            タイトルへ戻る
-        </button>
-    </div>
-
 
     <script>
-        // --- 背景の星屑生成 ---
-        function createStars() {
-            const container = document.getElementById('stars-container');
-            for (let i = 0; i < 50; i++) {
-                const star = document.createElement('div');
-                star.className = 'star';
-                const size = Math.random() * 3 + 1;
-                star.style.width = `${size}px`;
-                star.style.height = `${size}px`;
-                star.style.left = `${Math.random() * 100}%`;
-                star.style.top = `${Math.random() * 100}%`;
-                star.style.animationDuration = `${Math.random() * 3 + 2}s`;
-                star.style.animationDelay = `${Math.random() * 2}s`;
-                container.appendChild(star);
+        // --- SVG Data ---
+        const NORMAL_CRAB_SVG = `
+            <svg viewBox="0 0 120 120" class="w-full h-full crab-svg">
+                <g class="legs">
+                    <g stroke="#612d11" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round" class="leg-l">
+                        <polyline points="40,55 15,40 5,65" />
+                        <polyline points="40,65 10,55 0,80" />
+                        <polyline points="45,75 15,75 10,100" />
+                        <polyline points="50,85 25,90 20,110" />
+                    </g>
+                    <g stroke="#612d11" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round" class="leg-r">
+                        <polyline points="80,55 105,40 115,65" />
+                        <polyline points="80,65 110,55 120,80" />
+                        <polyline points="75,75 105,75 110,100" />
+                        <polyline points="70,85 95,90 100,110" />
+                    </g>
+                </g>
+                <path d="M45,45 Q20,10 15,25 Q10,40 35,50 Z" fill="#8c3f15" stroke="#4a1f0a" stroke-width="2"/>
+                <path d="M15,25 Q10,15 25,15 Q30,25 25,30 Z" fill="#8c3f15" stroke="#4a1f0a" stroke-width="1"/>
+                <path d="M75,45 Q100,10 105,25 Q110,40 85,50 Z" fill="#8c3f15" stroke="#4a1f0a" stroke-width="2"/>
+                <path d="M105,25 Q110,15 95,15 Q90,25 95,30 Z" fill="#8c3f15" stroke="#4a1f0a" stroke-width="1"/>
+                <!-- ゴツゴツした甲羅 -->
+                <path d="M40,35 L80,35 L95,55 L80,85 L40,85 L25,55 Z" fill="#a04b1c" stroke="#4a1f0a" stroke-width="2"/>
+                <path d="M50,45 Q60,50 70,45" stroke="#783410" stroke-width="2" fill="none"/>
+                <circle cx="48" cy="30" r="3" fill="#111"/>
+                <circle cx="72" cy="30" r="3" fill="#111"/>
+            </svg>
+        `;
+
+        const POISON_CRAB_SVG = `
+            <svg viewBox="0 0 120 120" class="w-full h-full crab-svg">
+                <g class="legs">
+                    <g stroke="#a67c52" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round" class="leg-l">
+                        <polyline points="40,60 20,50 15,70" />
+                        <polyline points="42,70 18,65 12,85" />
+                        <polyline points="45,80 22,80 18,100" />
+                        <polyline points="50,90 30,95 28,110" />
+                    </g>
+                    <g stroke="#a67c52" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round" class="leg-r">
+                        <polyline points="80,60 100,50 105,70" />
+                        <polyline points="78,70 102,65 108,85" />
+                        <polyline points="75,80 98,80 102,100" />
+                        <polyline points="70,90 90,95 92,110" />
+                    </g>
+                </g>
+                <!-- 丸っこいハサミ -->
+                <path d="M45,55 C25,35 15,50 25,65 Z" fill="#d9ad7c" stroke="#8b4513" stroke-width="2"/>
+                <path d="M25,45 C15,40 15,55 25,55 Z" fill="#4a1010" stroke="#220000" stroke-width="1"/>
+                <path d="M75,55 C95,35 105,50 95,65 Z" fill="#d9ad7c" stroke="#8b4513" stroke-width="2"/>
+                <path d="M95,45 C105,40 105,55 95,55 Z" fill="#4a1010" stroke="#220000" stroke-width="1"/>
+                <!-- 丸い甲羅 (スベスベマンジュウガニ) -->
+                <path d="M30,65 C20,30 100,30 90,65 C85,95 35,95 30,65 Z" fill="#e6c29a" stroke="#8b4513" stroke-width="2"/>
+                <!-- 毒々しい斑点模様 -->
+                <path d="M50,45 C45,40 55,35 60,40 C65,45 55,50 50,45 Z" fill="#7a2016" opacity="0.85"/>
+                <circle cx="35" cy="55" r="6" fill="#7a2016" opacity="0.85"/>
+                <circle cx="85" cy="55" r="6" fill="#7a2016" opacity="0.85"/>
+                <path d="M45,65 C40,75 50,80 55,70 C60,60 50,55 45,65 Z" fill="#7a2016" opacity="0.85"/>
+                <path d="M75,65 C80,75 70,80 65,70 C60,60 70,55 75,65 Z" fill="#7a2016" opacity="0.85"/>
+                <circle cx="60" cy="55" r="4" fill="#7a2016" opacity="0.85"/>
+                <circle cx="60" cy="80" r="4" fill="#7a2016" opacity="0.85"/>
+                <circle cx="40" cy="78" r="3" fill="#7a2016" opacity="0.85"/>
+                <circle cx="80" cy="78" r="3" fill="#7a2016" opacity="0.85"/>
+                <circle cx="50" cy="38" r="2" fill="#111"/>
+                <circle cx="70" cy="38" r="2" fill="#111"/>
+            </svg>
+        `;
+
+        const MAOU_CRAB_SVG = `
+            <svg viewBox="0 0 150 150" class="w-full h-full crab-svg drop-shadow-[0_0_15px_rgba(220,38,38,0.8)]">
+                <g class="legs">
+                    <g stroke="#3a0000" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round" class="leg-l">
+                        <polyline points="45,70 20,55 10,85" />
+                        <polyline points="45,85 15,75 5,105" />
+                        <polyline points="50,100 20,95 15,130" />
+                        <polyline points="55,115 30,110 25,140" />
+                    </g>
+                    <g stroke="#3a0000" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round" class="leg-r">
+                        <polyline points="105,70 130,55 140,85" />
+                        <polyline points="105,85 135,75 145,105" />
+                        <polyline points="100,100 130,95 135,130" />
+                        <polyline points="95,115 120,110 125,140" />
+                    </g>
+                </g>
+                <!-- 巨大なハサミ -->
+                <path d="M50,60 Q15,20 10,40 Q5,60 35,75 Z" fill="#1a0000" stroke="#ff0000" stroke-width="2"/>
+                <path d="M100,60 Q135,20 140,40 Q145,60 115,75 Z" fill="#1a0000" stroke="#ff0000" stroke-width="2"/>
+                <!-- 棘々しい甲羅 -->
+                <path d="M45,45 L75,30 L105,45 L120,75 L105,110 L75,120 L45,110 L30,75 Z" fill="#2a0000" stroke="#ff0000" stroke-width="3"/>
+                <!-- 目 -->
+                <circle cx="55" cy="50" r="6" fill="#ff0000"/>
+                <circle cx="95" cy="50" r="6" fill="#ff0000"/>
+                <circle cx="55" cy="50" r="2" fill="#fff"/>
+                <circle cx="95" cy="50" r="2" fill="#fff"/>
+                <!-- 王冠 -->
+                <path d="M60,35 L65,15 L75,25 L85,15 L90,35 Z" fill="#fbbf24" stroke="#b45309" stroke-width="2"/>
+            </svg>
+        `;
+
+        // --- Game Logic ---
+        const gameBoard = document.getElementById('game-board');
+        const scoreDisplay = document.getElementById('score-display');
+        const startScreen = document.getElementById('start-screen');
+        const gameoverScreen = document.getElementById('gameover-screen');
+        const finalScoreDisplay = document.getElementById('final-score');
+        const flashOverlay = document.getElementById('flash-overlay');
+
+        // --- Audio System (Maou BGM) ---
+        class MaouBGM {
+            constructor() {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                this.ctx = new AudioContext();
+                this.isPlaying = false;
+                this.tempo = 65;
+                this.beatDuration = 60 / this.tempo;
+                this.nextNoteTime = 0;
+                this.currentBeat = 0;
+                this.timerID = null;
+
+                // 魔王出現時のモードフラグ
+                this.isMaouMode = false;
+                this.droneOsc = null;
+                this.droneLfo = null;
+                this.droneGain = null;
+                this.sirenOsc = null;
+                this.sirenLfo = null;
+                this.sirenGain = null;
+
+                this.scale = [130.81, 146.83, 155.56, 174.61, 196.00, 207.65, 246.94, 261.63];
+                this.chords = [
+                    [0, 2, 4], // Cm
+                    [5, 0, 2], // Ab
+                    [3, 5, 0], // Fm
+                    [4, 6, 1]  // G
+                ];
+
+                this.setupReverb();
             }
-        }
-        createStars();
 
-        // --- データ定義 ---
-        const characters = {
-            princess: { id: 'princess', name: 'プリンセス', icon: '👸', maxHp: 150, atk: 15 },
-            wizard:   { id: 'wizard',   name: '魔法使い',   icon: '🧙‍♂️', maxHp: 120, atk: 25 },
-            beast:    { id: 'beast',    name: '野獣',       icon: '🦁', maxHp: 200, atk: 12 }
-        };
+            setupReverb() {
+                // 音割れ（クリッピング）を強力に防ぐコンプレッサー
+                this.compressor = this.ctx.createDynamicsCompressor();
+                this.compressor.threshold.value = -15; 
+                this.compressor.knee.value = 20;
+                this.compressor.ratio.value = 15;
+                this.compressor.attack.value = 0.005;
+                this.compressor.release.value = 0.1;
+                this.compressor.connect(this.ctx.destination);
 
-        const enemyTemplate = {
-            name: 'ヴィラン・アップル',
-            icon: '🍎',
-            maxHp: 300,
-            atk: 18
-        };
+                // ドライ音（原音）
+                this.mainOut = this.ctx.createGain();
+                this.mainOut.connect(this.compressor);
+                this.mainOut.gain.value = 1.0; 
 
-        // --- ゲーム状態管理 ---
-        let player = null;
-        let enemy = null;
-        let isBattleActive = false;
-        
-        let pIsActioning = false;
-        let pIsDefending = false;
-        let pSpecialCharge = 0; // 0 to 100
-        let pDefenseBuff = false; // 野獣用バフ
+                // ウェット音（残響音）
+                this.convolver = this.ctx.createConvolver();
+                this.convolver.buffer = this.createReverbImpulse(4.0, 3.5);
 
-        let eIsActioning = false;
-        let eIsDefending = false;
-        let enemyAiLoopId = null;
-        let chargeIntervalId = null;
+                // リバーブのシャリシャリノイズだけを削るローパスフィルター
+                this.reverbFilter = this.ctx.createBiquadFilter();
+                this.reverbFilter.type = 'lowpass';
+                this.reverbFilter.frequency.value = 2000; 
 
-        // --- 画面切り替え ---
-        function showScreen(screenId) {
-            ['screen-title', 'screen-select', 'screen-battle', 'screen-result'].forEach(id => {
-                document.getElementById(id).classList.add('hidden');
-            });
-            document.getElementById(screenId).classList.remove('hidden');
-        }
+                this.reverbGain = this.ctx.createGain();
+                this.reverbGain.gain.value = 1.0; 
 
-        function resetGame() {
-            isBattleActive = false;
-            clearTimeout(enemyAiLoopId);
-            clearInterval(chargeIntervalId);
-            showScreen('screen-title');
-        }
-
-        // --- ゲーム開始 ---
-        function selectCharacter(charId) {
-            player = { ...characters[charId], hp: characters[charId].maxHp };
-            enemy = { ...enemyTemplate, hp: enemyTemplate.maxHp };
-            
-            pSpecialCharge = 0;
-            pIsActioning = false;
-            pIsDefending = false;
-            pDefenseBuff = false;
-            eIsActioning = false;
-            eIsDefending = false;
-            
-            // UI初期化
-            document.getElementById('player-name').innerText = player.name;
-            document.getElementById('player-sprite').innerText = player.icon;
-            document.getElementById('enemy-name').innerText = enemy.name;
-            document.getElementById('enemy-sprite').innerText = enemy.icon;
-            
-            document.getElementById('player-sprite').className = 'sprite idle';
-            document.getElementById('enemy-sprite').className = 'sprite idle-enemy scale-x-reverse';
-            document.getElementById('player-shield').style.opacity = '0';
-            document.getElementById('enemy-shield').style.opacity = '0';
-
-            updateHUD();
-            showScreen('screen-battle');
-            
-            isBattleActive = true;
-            
-            // 敵のAI起動
-            startEnemyAI();
-
-            // 必殺技ゲージの自動チャージ（1秒に5%）
-            chargeIntervalId = setInterval(() => {
-                if(!isBattleActive) return;
-                addSpecialCharge(5);
-            }, 1000);
-        }
-
-        // --- HUD更新 ---
-        function updateHUD() {
-            // HP制限
-            if(player.hp < 0) player.hp = 0;
-            if(player.hp > player.maxHp) player.hp = player.maxHp;
-            if(enemy.hp < 0) enemy.hp = 0;
-
-            const pPer = (player.hp / player.maxHp) * 100;
-            const ePer = (enemy.hp / enemy.maxHp) * 100;
-            
-            document.getElementById('player-hp-bar').style.width = `${pPer}%`;
-            document.getElementById('enemy-hp-bar').style.width = `${ePer}%`;
-
-            // 必殺ゲージ更新
-            const specialBg = document.getElementById('special-gauge-bg');
-            const btnSpecial = document.getElementById('btn-special');
-            specialBg.style.height = `${pSpecialCharge}%`;
-            
-            if(pSpecialCharge >= 100) {
-                btnSpecial.classList.add('ready-pulse');
-            } else {
-                btnSpecial.classList.remove('ready-pulse');
+                this.convolver.connect(this.reverbFilter);
+                this.reverbFilter.connect(this.reverbGain);
+                this.reverbGain.connect(this.compressor);
             }
-        }
 
-        function addSpecialCharge(amount) {
-            if(pSpecialCharge >= 100) return;
-            pSpecialCharge = Math.min(100, pSpecialCharge + amount);
-            updateHUD();
-        }
+            createReverbImpulse(duration, decay) {
+                const sampleRate = this.ctx.sampleRate;
+                const length = sampleRate * duration;
+                const impulse = this.ctx.createBuffer(2, length, sampleRate);
+                const impulseL = impulse.getChannelData(0);
+                const impulseR = impulse.getChannelData(1);
 
-        // --- フローティングダメージ表示 ---
-        function spawnDamageText(targetElId, text, type) {
-            const target = document.getElementById(targetElId);
-            const rect = target.getBoundingClientRect();
-            
-            const div = document.createElement('div');
-            div.className = 'damage-text';
-            div.innerText = text;
-            
-            if(type === 'player-dmg') div.style.color = '#ef4444'; // 赤
-            else if(type === 'enemy-dmg') div.style.color = '#ffffff'; // 白
-            else if(type === 'guard') div.style.color = '#3b82f6'; // 青
-            else if(type === 'heal') div.style.color = '#4ade80'; // 緑
-            else if(type === 'critical') { div.style.color = '#facc15'; div.style.fontSize = '4rem'; } // 黄色大
+                for (let i = 0; i < length; i++) {
+                    const envelope = Math.pow(1 - i / length, decay);
+                    impulseL[i] = (Math.random() * 2 - 1) * envelope;
+                    impulseR[i] = (Math.random() * 2 - 1) * envelope;
+                }
+                return impulse;
+            }
 
-            // 少しランダムに散らす
-            const offsetX = (Math.random() - 0.5) * 80;
-            div.style.left = `${rect.left + rect.width/2 + offsetX}px`;
-            // 高さは固定気味
-            div.style.top = `${rect.top + 50}px`;
-            
-            document.body.appendChild(div);
-            
-            setTimeout(() => div.remove(), 1000);
-        }
+            setMaouMode(active) {
+                if (this.isMaouMode === active) return;
+                this.isMaouMode = active;
+                
+                // 魔王出現時はテンポを大幅に上げて焦燥感を煽る（BPM 65 -> 120）
+                this.tempo = active ? 120 : 65;
+                this.beatDuration = 60 / this.tempo;
 
-        // --- カットイン表示 ---
-        function showCutin(text, colorClass) {
-            const cutin = document.getElementById('cutin-text');
-            cutin.innerText = text;
-            cutin.className = `cutin font-magic show ${colorClass}`;
-            
-            setTimeout(() => {
-                cutin.classList.remove('show');
-            }, 1000);
-        }
-
-        // ================= アクション（プレイヤー） =================
-        function handleKeyDown(e) {
-            if(!isBattleActive) return;
-            if(e.key.toLowerCase() === 'a' || e.key === 'ArrowLeft') doAttack();
-            if(e.key.toLowerCase() === 's' || e.key === 'ArrowDown') doDefend();
-            if(e.key.toLowerCase() === 'd' || e.key === 'ArrowRight') doSpecial();
-        }
-
-        function triggerAnim(id, animClass, duration) {
-            const el = document.getElementById(id);
-            // リセット用
-            el.classList.remove('idle', 'idle-enemy', 'anim-dash-right', 'anim-dash-left', 'anim-hit', 'anim-enemy-hit');
-            void el.offsetWidth; // reflow
-            el.classList.add(animClass);
-            
-            setTimeout(() => {
-                el.classList.remove(animClass);
-                // 待機アニメーションに戻す（敵は反転付き）
-                if(id === 'enemy-sprite') el.classList.add('idle-enemy');
-                else el.classList.add('idle');
-            }, duration);
-        }
-
-        function doAttack() {
-            if(!isBattleActive || pIsActioning) return;
-            pIsActioning = true;
-            
-            // 防御解除
-            pIsDefending = false;
-            document.getElementById('player-shield').style.opacity = '0';
-            
-            // 突進アニメーション
-            triggerAnim('player-sprite', 'anim-dash-right', 300);
-
-            // ヒット判定 (アニメーションの中間くらいで発生)
-            setTimeout(() => {
-                if(!isBattleActive) return;
-
-                let dmg = Math.floor(player.atk * (0.8 + Math.random() * 0.4));
-                let isCrit = Math.random() < 0.1;
-                if(isCrit) dmg = Math.floor(dmg * 1.5);
-
-                if(eIsDefending) {
-                    dmg = Math.floor(dmg * 0.3); // ガード時70%カット
-                    spawnDamageText('enemy-sprite', 'GUARD', 'guard');
+                if (active) {
+                    this.startMaouDrone();
                 } else {
-                    triggerAnim('enemy-sprite', 'anim-enemy-hit', 400);
-                    spawnDamageText('enemy-sprite', dmg, isCrit ? 'critical' : 'enemy-dmg');
+                    this.stopMaouDrone();
+                }
+            }
+
+            startMaouDrone() {
+                const time = this.ctx.currentTime;
+                
+                // --- 地響きのような超低音のうなり ---
+                this.droneOsc = this.ctx.createOscillator();
+                this.droneOsc.type = 'sawtooth';
+                this.droneOsc.frequency.setValueAtTime(40, time); 
+
+                this.droneLfo = this.ctx.createOscillator();
+                this.droneLfo.type = 'sine';
+                this.droneLfo.frequency.setValueAtTime(2, time); // 2Hzで揺らす
+                const lfoGain = this.ctx.createGain();
+                lfoGain.gain.setValueAtTime(10, time);
+                this.droneLfo.connect(lfoGain);
+                lfoGain.connect(this.droneOsc.frequency);
+
+                this.droneGain = this.ctx.createGain();
+                this.droneGain.gain.setValueAtTime(0, time);
+                this.droneGain.gain.linearRampToValueAtTime(0.5, time + 2); 
+
+                this.droneOsc.connect(this.droneGain);
+                this.droneGain.connect(this.mainOut);
+                this.droneGain.connect(this.convolver);
+
+                // --- 絶望感のある高音サイレン ---
+                this.sirenOsc = this.ctx.createOscillator();
+                this.sirenOsc.type = 'triangle';
+                this.sirenOsc.frequency.setValueAtTime(800, time);
+                
+                this.sirenLfo = this.ctx.createOscillator();
+                this.sirenLfo.type = 'sine';
+                this.sirenLfo.frequency.setValueAtTime(0.5, time); // ゆっくり揺れる
+                const sirenLfoGain = this.ctx.createGain();
+                sirenLfoGain.gain.setValueAtTime(200, time); // 200Hz幅でピッチを変調
+                this.sirenLfo.connect(sirenLfoGain);
+                sirenLfoGain.connect(this.sirenOsc.frequency);
+
+                this.sirenGain = this.ctx.createGain();
+                this.sirenGain.gain.setValueAtTime(0, time);
+                this.sirenGain.gain.linearRampToValueAtTime(0.1, time + 2); 
+
+                this.sirenOsc.connect(this.sirenGain);
+                this.sirenGain.connect(this.mainOut);
+                this.sirenGain.connect(this.convolver);
+
+                // 再生開始
+                this.droneOsc.start(time);
+                this.droneLfo.start(time);
+                this.sirenOsc.start(time);
+                this.sirenLfo.start(time);
+            }
+
+            stopMaouDrone() {
+                const time = this.ctx.currentTime;
+                if (this.droneOsc) {
+                    this.droneGain.gain.linearRampToValueAtTime(0, time + 1.5);
+                    this.droneOsc.stop(time + 1.5);
+                    this.droneLfo.stop(time + 1.5);
+                    this.droneOsc = null;
+                }
+                if (this.sirenOsc) {
+                    this.sirenGain.gain.linearRampToValueAtTime(0, time + 1.5);
+                    this.sirenOsc.stop(time + 1.5);
+                    this.sirenLfo.stop(time + 1.5);
+                    this.sirenOsc = null;
+                }
+            }
+
+            start() {
+                if (this.isPlaying) return;
+                this.ctx.resume();
+                this.isPlaying = true;
+                this.nextNoteTime = this.ctx.currentTime + 0.1;
+                this.currentBeat = 0;
+                this.schedule();
+            }
+
+            stop() {
+                this.isPlaying = false;
+                clearTimeout(this.timerID);
+            }
+
+            playOrganChord(freqs, time, duration, vol = 0.12) {
+                const masterGain = this.ctx.createGain();
+                masterGain.gain.setValueAtTime(0, time);
+                masterGain.gain.linearRampToValueAtTime(vol, time + 0.1);
+                masterGain.gain.setValueAtTime(vol, time + duration - 0.2);
+                masterGain.gain.linearRampToValueAtTime(0, time + duration);
+                
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.value = 1200; 
+                filter.Q.value = 1.5; 
+                
+                masterGain.connect(filter);
+                filter.connect(this.mainOut);
+                filter.connect(this.convolver);
+
+                freqs.forEach(f => {
+                    this.createOscillator(f, 'sawtooth', time, duration, masterGain, 0.4, 0); 
+                    this.createOscillator(f, 'square', time, duration, masterGain, 0.3, 10); 
+                    this.createOscillator(f, 'square', time, duration, masterGain, 0.3, -10); 
+                    this.createOscillator(f * 2, 'sawtooth', time, duration, masterGain, 0.2, 5); 
+                    this.createOscillator(f * 0.5, 'square', time, duration, masterGain, 0.5, 0); 
+                    this.createOscillator(f * 0.25, 'triangle', time, duration, masterGain, 0.4, 0); 
+                });
+            }
+
+            createOscillator(freq, type, time, duration, dest, gainValue, detune = 0) {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = type;
+                osc.frequency.value = freq;
+                osc.detune.value = detune; 
+                gain.gain.value = gainValue;
+                osc.connect(gain);
+                gain.connect(dest);
+                osc.start(time);
+                osc.stop(time + duration);
+            }
+
+            playTimpani(freq, time) {
+                const oscAttack = this.ctx.createOscillator();
+                oscAttack.type = 'square';
+                const filterAttack = this.ctx.createBiquadFilter();
+                filterAttack.type = 'lowpass';
+                filterAttack.frequency.setValueAtTime(800, time);
+                filterAttack.frequency.exponentialRampToValueAtTime(50, time + 0.1);
+                
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq * 1.5, time);
+                osc.frequency.exponentialRampToValueAtTime(freq * 0.4, time + 0.6); 
+
+                gain.gain.setValueAtTime(0, time);
+                gain.gain.linearRampToValueAtTime(1.0, time + 0.02); 
+                gain.gain.exponentialRampToValueAtTime(0.01, time + 1.5);
+
+                oscAttack.connect(filterAttack);
+                filterAttack.connect(gain);
+
+                osc.connect(gain);
+                gain.connect(this.mainOut);
+                gain.connect(this.convolver); 
+                
+                oscAttack.start(time);
+                oscAttack.stop(time + 0.1);
+                osc.start(time);
+                osc.stop(time + 1.5);
+            }
+
+            playCatchSound() {
+                if(!this.isPlaying) return;
+                const time = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(800, time);
+                osc.frequency.exponentialRampToValueAtTime(1600, time + 0.1);
+                
+                gain.gain.setValueAtTime(0, time);
+                gain.gain.linearRampToValueAtTime(0.2, time + 0.02);
+                gain.gain.exponentialRampToValueAtTime(0.01, time + 0.1);
+                
+                gain.connect(this.mainOut);
+                const seReverb = this.ctx.createGain();
+                seReverb.gain.value = 0.5;
+                seReverb.connect(this.convolver);
+                gain.connect(seReverb);
+
+                osc.connect(gain);
+                osc.start(time);
+                osc.stop(time + 0.1);
+            }
+
+            playGameOverSound() {
+                const time = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(150, time);
+                osc.frequency.exponentialRampToValueAtTime(20, time + 2); 
+                
+                gain.gain.setValueAtTime(0, time);
+                gain.gain.linearRampToValueAtTime(0.3, time + 0.1);
+                gain.gain.exponentialRampToValueAtTime(0.01, time + 2);
+                
+                gain.connect(this.mainOut);
+                gain.connect(this.convolver); 
+
+                osc.connect(gain);
+                osc.start(time);
+                osc.stop(time + 2);
+            }
+
+            playMaouSpawnSound() {
+                if (!this.isPlaying) return;
+                const time = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(100, time);
+                osc.frequency.exponentialRampToValueAtTime(40, time + 3);
+                
+                gain.gain.setValueAtTime(0, time);
+                gain.gain.linearRampToValueAtTime(0.8, time + 0.1);
+                gain.gain.exponentialRampToValueAtTime(0.01, time + 3);
+                
+                gain.connect(this.mainOut);
+                gain.connect(this.convolver);
+                
+                osc.connect(gain);
+                osc.start(time);
+                osc.stop(time + 3);
+            }
+            
+            playMaouHitSound() {
+                if (!this.isPlaying) return;
+                const time = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(200, time);
+                osc.frequency.exponentialRampToValueAtTime(50, time + 0.1);
+                
+                gain.gain.setValueAtTime(0.3, time);
+                gain.gain.exponentialRampToValueAtTime(0.01, time + 0.1);
+                
+                gain.connect(this.mainOut);
+                
+                osc.connect(gain);
+                osc.start(time);
+                osc.stop(time + 0.1);
+            }
+
+            schedule() {
+                while (this.nextNoteTime < this.ctx.currentTime + 0.1) {
+                    this.playBeat(this.currentBeat, this.nextNoteTime);
+                    this.nextNoteTime += this.beatDuration;
+                    this.currentBeat = (this.currentBeat + 1) % 16;
+                }
+                if (this.isPlaying) {
+                    this.timerID = setTimeout(() => this.schedule(), 25);
+                }
+            }
+
+            playBeat(beat, time) {
+                const bar = Math.floor(beat / 4);
+                const beatInBar = beat % 4;
+                
+                const chordBase = this.chords[bar % this.chords.length];
+                let freqs = chordBase.map(i => this.scale[i]);
+                let rootBass = this.scale[chordBase[0]] * 0.5;
+
+                if (this.isMaouMode) {
+                    // 魔王モード：全体的に半音下げて不協和音にする
+                    const pitchDown = 0.9438; // 約半音下げる
+                    freqs = freqs.map(f => f * pitchDown);
+                    rootBass *= pitchDown;
+
+                    // 悪魔の音程（トライトーン）を不協和音としてねじ込む
+                    freqs.push(rootBass * 2 * 1.414); 
+                    
+                    // 心臓の鼓動のように毎拍ティンパニを鳴らして焦燥感を限界まで高める
+                    this.playTimpani(65.41 * pitchDown, time); 
+                } else {
+                    if (beatInBar === 0 || beatInBar === 2) {
+                        this.playTimpani(65.41, time); 
+                    }
                 }
                 
-                enemy.hp -= dmg;
-                addSpecialCharge(15); // 攻撃でチャージ
-                updateHUD();
-                checkWin();
+                // 毎拍ベース音（ルート音の1オクターブ下）を刻む
+                this.playOrganChord([rootBass], time, this.beatDuration * 0.8, this.isMaouMode ? 0.15 : 0.1);
 
-            }, 150);
-
-            // アクション終了
-            setTimeout(() => { pIsActioning = false; }, 350);
-        }
-
-        function doDefend() {
-            if(!isBattleActive || pIsActioning) return;
-            pIsActioning = true;
-            pIsDefending = true;
-            
-            document.getElementById('player-shield').style.opacity = '1';
-            
-            // 約1秒間ガードを維持
-            setTimeout(() => {
-                pIsDefending = false;
-                document.getElementById('player-shield').style.opacity = '0';
-                pIsActioning = false; // 次の行動可能に
-            }, 800);
-        }
-
-        function doSpecial() {
-            if(!isBattleActive || pIsActioning || pSpecialCharge < 100) return;
-            pIsActioning = true;
-            pSpecialCharge = 0;
-            updateHUD();
-
-            pIsDefending = false;
-            document.getElementById('player-shield').style.opacity = '0';
-
-            // 画面暗転エフェクト
-            const overlay = document.getElementById('special-overlay');
-            overlay.classList.add('show');
-            
-            // 画面を揺らす
-            document.getElementById('game-body').classList.add('anim-screen-shake');
-
-            setTimeout(() => {
-                // キャラ別の技発動
-                if(player.id === 'princess') {
-                    showCutin("王家の癒し！", "text-color-green");
-                    const heal = Math.floor(player.maxHp * 0.5);
-                    player.hp += heal;
-                    spawnDamageText('player-sprite', `+${heal}`, 'heal');
-                    
-                } else if(player.id === 'wizard') {
-                    showCutin("メテオ・ストライク！", "text-color-blue");
-                    triggerAnim('player-sprite', 'anim-dash-right', 500);
-                    setTimeout(() => {
-                        triggerAnim('enemy-sprite', 'anim-enemy-hit', 600);
-                        const dmg = player.atk * 4;
-                        enemy.hp -= dmg;
-                        spawnDamageText('enemy-sprite', dmg, 'critical');
-                        checkWin();
-                    }, 200);
-
-                } else if(player.id === 'beast') {
-                    showCutin("ビースト・ラッシュ！", "text-color-red");
-                    pDefenseBuff = true; // しばらく防御力UP
-                    triggerAnim('player-sprite', 'anim-dash-right', 400);
-                    setTimeout(() => {
-                        triggerAnim('enemy-sprite', 'anim-enemy-hit', 400);
-                        const dmg = player.atk * 3;
-                        enemy.hp -= dmg;
-                        spawnDamageText('enemy-sprite', dmg, 'critical');
-                        checkWin();
-                    }, 150);
-                    // バフは5秒で切れる
-                    setTimeout(() => { pDefenseBuff = false; }, 5000);
+                // 小節の頭で分厚い和音
+                if (beatInBar === 0) {
+                    this.playOrganChord(freqs, time, this.beatDuration * 4, this.isMaouMode ? 0.2 : 0.15); 
                 }
 
-                updateHUD();
-                
-                // エフェクト解除
-                overlay.classList.remove('show');
-                document.getElementById('game-body').classList.remove('anim-screen-shake');
-                
-                pIsActioning = false;
-            }, 600);
+                // ランダムな不気味メロディ
+                if (Math.random() > 0.6) {
+                    const melodyNote = this.scale[Math.floor(Math.random() * this.scale.length)] * 4;
+                    this.playOrganChord([melodyNote * (this.isMaouMode ? 0.9438 : 1)], time, this.beatDuration, 0.05);
+                }
+            }
         }
 
-        // ================= 敵のAI（リアルタイムループ） =================
-        function startEnemyAI() {
-            function aiLoop() {
-                if(!isBattleActive) return;
-                
-                // 0.8秒〜1.8秒のランダム間隔で行動
-                const delay = 800 + Math.random() * 1000;
-                enemyAiLoopId = setTimeout(() => {
-                    if(!isBattleActive || eIsActioning) return aiLoop();
-                    
-                    const r = Math.random();
-                    if(r < 0.25) {
-                        enemyDefend();
-                    } else if(r < 0.85) {
-                        enemyAttack(false);
-                    } else {
-                        enemyAttack(true); // 強攻撃
-                    }
-                    
-                    aiLoop();
-                }, delay);
+        let isPlaying = false;
+        let score = 0;
+        let crabs = [];
+        let crabIdCounter = 0;
+        let bgm; // BGMインスタンス
+        
+        // 魔王関連の変数
+        let maou = null;
+        let maouSpawnTimer = 0;
+        let maouLevel = 1;
+        
+        let lastTime = 0;
+        let spawnTimer = 0;
+        let spawnInterval = 1200; // ms
+        let speedMultiplier = 1;
+        let animationFrameId;
+
+        document.getElementById('start-btn').addEventListener('click', startGame);
+        document.getElementById('retry-btn').addEventListener('click', startGame);
+
+        function startGame() {
+            // BGMの初期化と再生
+            if (!bgm) {
+                bgm = new MaouBGM();
             }
-            aiLoop();
-        }
+            bgm.setMaouMode(false); // 念のためリセット
+            bgm.start();
 
-        function enemyAttack(isStrong) {
-            eIsActioning = true;
-            eIsDefending = false;
-            document.getElementById('enemy-shield').style.opacity = '0';
-
-            // 事前モーション（強攻撃の場合は赤く光ってタメる）
-            if(isStrong) {
-                document.getElementById('enemy-sprite').style.filter = 'drop-shadow(0 0 20px red)';
-            }
-
-            const prepTime = isStrong ? 600 : 0; // 強攻撃は隙がある
+            isPlaying = true;
+            score = 0;
+            speedMultiplier = 1;
+            spawnInterval = 1200;
+            scoreDisplay.textContent = score;
             
-            setTimeout(() => {
-                if(!isBattleActive) return;
-                document.getElementById('enemy-sprite').style.filter = 'drop-shadow(0 25px 25px rgba(0,0,0,0.5))'; // 元に戻す
-                
-                // 突進アニメーション
-                triggerAnim('enemy-sprite', 'anim-dash-left', 300);
-
-                // ヒット判定
-                setTimeout(() => {
-                    if(!isBattleActive) return;
-                    
-                    let dmg = Math.floor(enemy.atk * (isStrong ? 2.0 : 1.0) * (0.8 + Math.random() * 0.4));
-                    
-                    // 防御・バフ判定
-                    if(pIsDefending) {
-                        dmg = Math.floor(dmg * 0.3);
-                        spawnDamageText('player-sprite', 'GUARD', 'guard');
-                    } else {
-                        if(pDefenseBuff) dmg = Math.floor(dmg * 0.6); // 野獣バフ
-                        triggerAnim('player-sprite', 'anim-hit', 400);
-                        spawnDamageText('player-sprite', dmg, 'player-dmg');
-                        
-                        if(isStrong) {
-                            document.getElementById('game-body').classList.add('anim-screen-shake');
-                            setTimeout(() => document.getElementById('game-body').classList.remove('anim-screen-shake'), 300);
-                        }
-                    }
-                    
-                    player.hp -= dmg;
-                    updateHUD();
-                    checkWin();
-                }, 150);
-
-                setTimeout(() => { eIsActioning = false; }, 400);
-
-            }, prepTime);
-        }
-
-        function enemyDefend() {
-            eIsActioning = true;
-            eIsDefending = true;
-            document.getElementById('enemy-shield').style.opacity = '1';
+            // クリーンアップ
+            crabs.forEach(c => c.el.remove());
+            crabs = [];
+            if (maou) {
+                maou.el.remove();
+                maou = null;
+            }
+            maouLevel = 1;
+            maouSpawnTimer = 15000 + Math.random() * 10000; // 15秒〜25秒後に最初の魔王
             
-            setTimeout(() => {
-                eIsDefending = false;
-                document.getElementById('enemy-shield').style.opacity = '0';
-                eIsActioning = false;
-            }, 1000);
+            startScreen.classList.add('hidden');
+            gameoverScreen.classList.add('hidden');
+            
+            lastTime = performance.now();
+            animationFrameId = requestAnimationFrame(gameLoop);
         }
 
-        // ================= 勝敗判定 =================
-        function checkWin() {
-            if(player.hp <= 0 || enemy.hp <= 0) {
-                isBattleActive = false;
-                clearTimeout(enemyAiLoopId);
-                clearInterval(chargeIntervalId);
+        function gameOver(reason = "猛毒にやられた...") {
+            isPlaying = false;
+            cancelAnimationFrame(animationFrameId);
+            
+            document.getElementById('gameover-reason').innerHTML = reason;
+            
+            // BGM停止とゲームオーバー音再生
+            if (bgm) {
+                bgm.setMaouMode(false); // サイレン等を止める
+                bgm.stop();
+                bgm.playGameOverSound();
+            }
 
-                setTimeout(() => {
-                    const title = document.getElementById('result-title');
-                    const desc = document.getElementById('result-desc');
-                    
-                    if(player.hp > 0) {
-                        title.innerText = "YOU WIN!";
-                        title.className = "result-title font-magic win";
-                        desc.innerText = "見事ヴィランを打ち倒した！";
-                    } else {
-                        title.innerText = "YOU LOSE...";
-                        title.className = "result-title font-magic lose";
-                        desc.innerText = "力尽きてしまった...";
-                    }
-                    showScreen('screen-result');
-                }, 1000); // 倒れた後少し待ってからリザルトへ
+            // フラッシュエフェクト
+            flashOverlay.classList.add('flash-red');
+            setTimeout(() => {
+                flashOverlay.classList.remove('flash-red');
+                finalScoreDisplay.textContent = score;
+                gameoverScreen.classList.remove('hidden');
+            }, 300);
+        }
+
+        function getSpawnAndTargetPoints() {
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            const pad = 150; // 画面外のマージン
+            const side = Math.floor(Math.random() * 4); // 0:Top, 1:Right, 2:Bottom, 3:Left
+            
+            let startX, startY;
+            if (side === 0) { startX = Math.random() * w; startY = -pad; }
+            else if (side === 1) { startX = w + pad; startY = Math.random() * h; }
+            else if (side === 2) { startX = Math.random() * w; startY = h + pad; }
+            else { startX = -pad; startY = Math.random() * h; }
+
+            // ターゲットは画面中心のエリア
+            const targetX = w * 0.2 + Math.random() * (w * 0.6);
+            const targetY = h * 0.2 + Math.random() * (h * 0.6);
+
+            return { startX, startY, targetX, targetY };
+        }
+
+        function spawnCrab() {
+            const isPoison = Math.random() < 0.25; // 25%の確率で毒カニ
+            const size = 60 + Math.random() * 50; // 60px - 110px
+            const { startX, startY, targetX, targetY } = getSpawnAndTargetPoints();
+            
+            const dx = targetX - startX;
+            const dy = targetY - startY;
+            const distance = Math.sqrt(dx*dx + dy*dy);
+            
+            // 基本速度 + ランダム + 進行度による倍率
+            const speed = (80 + Math.random() * 60) * speedMultiplier; 
+            const vx = (dx / distance) * speed;
+            const vy = (dy / distance) * speed;
+            
+            // 進行方向の角度
+            const moveAngle = Math.atan2(vy, vx) * 180 / Math.PI;
+            // カニは横歩きさせる (進行方向に対して±90度向く)
+            const walkOffset = Math.random() > 0.5 ? 90 : -90;
+            const visualRotation = moveAngle + walkOffset + 90; // SVGの上が0度になるよう調整
+
+            const id = `crab-${crabIdCounter++}`;
+            const el = document.createElement('div');
+            el.className = 'crab-wrapper flex items-center justify-center';
+            el.style.width = `${size}px`;
+            el.style.height = `${size}px`;
+            
+            // 足と体の個別アニメーション速度
+            const animSpeed = (0.2 + Math.random() * 0.15) / Math.max(0.5, speedMultiplier * 0.8);
+
+            el.innerHTML = `
+                <style>
+                    .${id} .leg-l { animation: walkL ${animSpeed}s infinite linear; transform-origin: top center; }
+                    .${id} .leg-r { animation: walkR ${animSpeed}s infinite linear; transform-origin: top center; }
+                    .${id} .body-anim { animation: bodyRoll ${animSpeed * 1.5}s infinite alternate linear; }
+                </style>
+                <div class="body-anim ${id} w-full h-full" style="transform: rotate(${visualRotation}deg)">
+                    ${isPoison ? POISON_CRAB_SVG : NORMAL_CRAB_SVG}
+                </div>
+            `;
+
+            gameBoard.appendChild(el);
+
+            const crabObj = { id, el, x: startX, y: startY, vx, vy, size, isPoison };
+            crabs.push(crabObj);
+
+            // タップ/クリックイベント
+            el.addEventListener('pointerdown', (e) => {
+                e.preventDefault(); // タッチ時のスクロール等防止
+                e.stopPropagation();
+                if (!isPlaying) return;
+
+                if (isPoison) {
+                    gameOver("猛毒にやられた...");
+                } else {
+                    catchCrab(crabObj, e.clientX, e.clientY);
+                }
+            });
+        }
+
+        function spawnMaou() {
+            if (bgm) {
+                bgm.playMaouSpawnSound();
+                bgm.setMaouMode(true); // ★絶望のBGMへ切り替え
+            }
+            
+            // 警告表示
+            const warning = document.getElementById('warning-overlay');
+            warning.classList.remove('hidden');
+            setTimeout(() => warning.classList.add('hidden'), 1500);
+
+            const size = 180;
+            const x = window.innerWidth / 2;
+            const y = 80; // 画面上部
+            
+            const el = document.createElement('div');
+            el.className = 'maou-wrapper maou-float';
+            el.style.left = `${x - size/2}px`;
+            el.style.top = `${y}px`;
+            el.style.width = `${size}px`;
+            
+            // 必要なタップ回数（レベルが上がるごとに増える）
+            const maxHp = 5 + (maouLevel * 2);
+            // 攻撃までの時間（秒）
+            const maxCharge = Math.max(3.0, 7.0 - (maouLevel * 0.5));
+            
+            el.innerHTML = `
+                <div class="w-full bg-black/80 border-2 border-red-800 p-1 mb-2 rounded shadow-[0_0_10px_rgba(255,0,0,0.5)]">
+                    <div id="maou-charge" class="h-3 bg-gradient-to-r from-red-500 to-yellow-400 w-0 transition-all"></div>
+                </div>
+                <div class="w-full h-[${size}px]">
+                    ${MAOU_CRAB_SVG}
+                </div>
+            `;
+            
+            gameBoard.appendChild(el);
+            
+            maou = {
+                el,
+                chargeBar: el.querySelector('#maou-charge'),
+                hp: maxHp,
+                charge: 0,
+                maxCharge: maxCharge,
+            };
+            
+            el.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!isPlaying || !maou) return;
+                
+                hitMaou(e.clientX, e.clientY);
+            });
+        }
+
+        function hitMaou(x, y) {
+            if (!maou) return;
+            
+            maou.hp--;
+            if (bgm) bgm.playMaouHitSound();
+
+            // ダメージエフェクト
+            maou.el.style.transform = 'scale(0.9)';
+            setTimeout(() => { if (maou) maou.el.style.transform = ''; }, 50);
+
+            if (maou.hp <= 0) {
+                // 撃退成功
+                if (bgm) bgm.setMaouMode(false); // ★元のBGMに戻す
+
+                const bonus = 300 * maouLevel;
+                score += bonus;
+                scoreDisplay.textContent = score;
+                
+                const popup = document.createElement('div');
+                popup.className = 'score-popup text-purple-400 font-black text-4xl';
+                popup.style.left = `${x}px`;
+                popup.style.top = `${y}px`;
+                popup.textContent = `撃退! +${bonus}`;
+                document.body.appendChild(popup);
+                setTimeout(() => popup.remove(), 1000);
+                
+                maou.el.remove();
+                maou = null;
+                maouLevel++;
+                maouSpawnTimer = 15000 + Math.random() * 10000; // 次の出現タイマーセット
             }
         }
+
+        function catchCrab(crabObj, x, y) {
+            // 効果音再生
+            if (bgm) bgm.playCatchSound();
+
+            // スコア処理
+            score += 10;
+            scoreDisplay.textContent = score;
+            
+            // 難易度上昇
+            if (score % 50 === 0) {
+                speedMultiplier += 0.15;
+                spawnInterval = Math.max(400, spawnInterval - 100);
+            }
+
+            // エフェクト表示
+            const popup = document.createElement('div');
+            popup.className = 'score-popup';
+            popup.style.left = `${x}px`;
+            popup.style.top = `${y}px`;
+            popup.textContent = '+10';
+            document.body.appendChild(popup);
+            setTimeout(() => popup.remove(), 600);
+
+            removeCrab(crabObj);
+        }
+
+        function removeCrab(crabObj) {
+            crabObj.el.remove();
+            crabs = crabs.filter(c => c.id !== crabObj.id);
+        }
+
+        function gameLoop(timestamp) {
+            if (!isPlaying) return;
+            
+            const deltaTime = (timestamp - lastTime) / 1000;
+            lastTime = timestamp;
+            
+            // カニの移動と境界チェック
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            const outMargin = 200;
+
+            for (let i = crabs.length - 1; i >= 0; i--) {
+                const c = crabs[i];
+                c.x += c.vx * deltaTime;
+                c.y += c.vy * deltaTime;
+                
+                c.el.style.transform = `translate(${c.x - c.size/2}px, ${c.y - c.size/2}px)`;
+                
+                // 画面外に完全に出たら消去
+                if (c.x < -outMargin || c.x > w + outMargin || c.y < -outMargin || c.y > h + outMargin) {
+                    removeCrab(c);
+                }
+            }
+            
+            // カニのスポーン制御
+            spawnTimer += deltaTime * 1000;
+            if (spawnTimer > spawnInterval) {
+                spawnCrab();
+                spawnTimer = 0;
+            }
+            
+            // 魔王の出現とチャージ制御
+            if (!maou) {
+                maouSpawnTimer -= deltaTime * 1000;
+                if (maouSpawnTimer <= 0) {
+                    spawnMaou();
+                }
+            } else {
+                // チャージ増加
+                maou.charge += deltaTime;
+                const chargePercent = (maou.charge / maou.maxCharge) * 100;
+                maou.chargeBar.style.width = `${chargePercent}%`;
+                
+                // ゲージが80%を超えたら震える
+                if (chargePercent > 80) {
+                    maou.el.classList.add('maou-shake');
+                    maou.el.classList.remove('maou-float');
+                }
+                
+                // チャージ完了でゲームオーバー
+                if (maou.charge >= maou.maxCharge) {
+                    gameOver("魔王ガニの<br>滅びの波動を受けた...");
+                }
+            }
+            
+            animationFrameId = requestAnimationFrame(gameLoop);
+        }
+
     </script>
 </body>
 </html>
